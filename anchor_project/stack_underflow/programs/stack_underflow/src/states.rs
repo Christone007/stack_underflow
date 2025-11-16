@@ -17,3 +17,12 @@ pub struct Question {
     pub question_body: String,
     pub answer_count: u64,
 }
+
+#[account]
+#[derive(InitSpace)]
+pub struct Answer {
+    pub answer_author: Pubkey,
+    #[max_len(ANSWER_LENGTH)]
+    pub answer_body: String,
+    pub timestamp: i64,
+}

@@ -4,25 +4,23 @@ use crate::errors::StackError;
 use crate::states::*;
 
 pub fn create_question(ctx: Context<CreateQuestion>, topic: String, body: String) -> Result<()> {
-    let question = &mut ctx.accounts.question;
-    let creator = &mut ctx.accounts.question_authority;
-    let question_topic = topic;
-    let question_body = body;
+    let question: &mut Account<'_, Question> = &mut ctx.accounts.question;
+    let creator = &ctx.accounts.question_authority;
 
     require!(
-        question_topic.len() <= QUESTION_TOPIC_LENGTH,
+        topic.len() <= QUESTION_TOPIC_LENGTH,
         StackError::QuestionTopicTooLong
     );
 
     require!(
-        question_body.len() <= QUESTION_BODY_LENGTH,
+        body.len() <= QUESTION_BODY_LENGTH,
         StackError::QuestionBodyTooLong
     );
 
+    question.question_creator = creator.key();
+    question.question_topic = topic;
+    question.question_body = body;
     question.answer_count = 0;
-    question.question_creator = creator.to_account_info().key();
-    question.question_topic = question_topic;
-    question.question_body = question_body;
 
     Ok(())
 }
@@ -36,7 +34,7 @@ pub struct CreateQuestion<'info> {
         init,
         payer=question_authority,
         space=8 + Question::INIT_SPACE,
-        seeds=[QUESTION_SEED.as_bytes(), topic.as_bytes()], // question_authority is not part of the seed, hence pubKey not required to generate the PDA. Anyone can generate the question's pda deterministically without knowing who created it
+        seeds=[QUESTION_SEED.as_bytes(), topic.as_bytes(), question_authority.key().as_ref()], // question_authority is now part of the seed to allow questions to be unique to their creators
         bump,
     )]
     pub question: Account<'info, Question>,
