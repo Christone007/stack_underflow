@@ -21,12 +21,15 @@ describe("stack_underflow", () => {
 
   const question_1_topic = "What is a PDA?";
   const question_1_body = "I came across something called PDAs while learning solana development. What exactly do they mean?";
+  let emeka_question_pda;
 
   const alice_question_topic = "What is ED25519 curve?rrrrrrrrrr"
   const alice_question_body = "Someone should dive deep into the full mathematics behind secp256k1 from the prime field, short Weierstrass form, base point G, cofactor, all the way to how ECDSA signing/verification actually works u";
+  let alice_question_pda;
 
   const bob_question_topic = "What is ED25519 curve?";
-  const bob_quesion_body = "Someone should dive deep into the full mathematics behind secp256k1 from the prime field, short Weierstrass form, base point G, cofactor, all the way to how ECDSA signing/verification actually works under the hood."
+  const bob_question_body = "Someone should dive deep into the full mathematics behind secp256k1 from the prime field, short Weierstrass form, base point G, cofactor, all the way to how ECDSA signing/verification actually works under the hood.";
+  let bob_question_pda;
 
   describe("Create a Question", async () => {
     it("Emeka: create a question with a valid topic and body", async () => {
@@ -39,6 +42,8 @@ describe("stack_underflow", () => {
         anchor.utils.bytes.utf8.encode(question_1_topic),
         emeka.publicKey.toBuffer(),
       ], program.programId);
+
+      emeka_question_pda = question_pda;
 
       // console.log(`The Generated Question PDA is: ${question_pda} and its bump is ${question_bump}\n\n-> writing to PDA...`);
 
@@ -60,11 +65,13 @@ describe("stack_underflow", () => {
       await airdrop(provider.connection, alice.publicKey);
 
       // generate the question address deterministically
-      const [alice_question_pda, alice_question_bump] = PublicKey.findProgramAddressSync([
+      const [question_pda, alice_question_bump] = PublicKey.findProgramAddressSync([
         anchor.utils.bytes.utf8.encode(QUESTION_SEED),
         anchor.utils.bytes.utf8.encode(alice_question_topic),
         alice.publicKey.toBuffer(),
       ], program.programId);
+
+      alice_question_pda = question_pda;
 
       // call the create_question method and provide topic and body within the max_limit length
       await program.methods.initialize(alice_question_topic, alice_question_body).accounts(
@@ -85,16 +92,18 @@ describe("stack_underflow", () => {
       await airdrop(provider.connection, bob.publicKey);
 
       // find a program address for the question PDA
-      const [bob_question_pda] = PublicKey.findProgramAddressSync([
+      const [question_pda] = PublicKey.findProgramAddressSync([
         anchor.utils.bytes.utf8.encode(QUESTION_SEED),
         anchor.utils.bytes.utf8.encode(bob_question_topic),
         bob.publicKey.toBuffer(),
       ], program.programId);
 
+      bob_question_pda = question_pda;
+
       // call the create_question method with overflowing args
       let txError;
       try {
-        await program.methods.initialize(bob_question_topic, bob_quesion_body).accounts(
+        await program.methods.initialize(bob_question_topic, bob_question_body).accounts(
           {
             questionAuthority: bob.publicKey,
             question: bob_question_pda,
@@ -119,10 +128,33 @@ describe("stack_underflow", () => {
 
   describe("Post Answers", async () => {
     it("Emeka should be able to answer his own question", async () => {
+      // call the post_answer method
+      program.methods.
 
+
+      // confirm that account data matches emeka's answer
+    })
+
+    it("Emeka's question count should increase to 1", async () => {
+      // fetch emeka's question account info
+
+      // confirm that the answer count is now 1
     })
 
     it("Alice should be able to answer Emeka's question", async () => {
+
+
+    })
+
+    it("Emeka's question count should increase to 2", async () => {
+
+    })
+
+    it("Bob should be able to answer Emeka's question", async () => {
+
+    })
+
+    it("Emeka's question count should increase to 3", async () => {
 
     })
   })

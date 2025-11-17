@@ -20,4 +20,8 @@ pub mod stack_underflow {
     ) -> Result<()> {
         create_question(ctx, question_topic, question_body)
     }
+
+    pub fn answer(ctx: Context<PostAnswer>, answer_body: String) -> Result<()> {
+        post_answer(ctx, answer_body)
+    }
 }
