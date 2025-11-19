@@ -8,4 +8,6 @@ pub enum StackError {
     QuestionBodyTooLong,
     #[msg("Cannot Post, Answer too long")]
     AnswerTooLong,
+    #[msg("Invalid answer index provided")]
+    InvalidAnswerIndex,
 }

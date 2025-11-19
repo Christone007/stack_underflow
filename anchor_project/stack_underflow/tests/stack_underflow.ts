@@ -21,14 +21,17 @@ describe("stack_underflow", () => {
 
   const question_1_topic = "What is a PDA?";
   const question_1_body = "I came across something called PDAs while learning solana development. What exactly do they mean?";
+  const emeka_answer_body = "I now know that PDA stands for 'Program-Derived Address' but that is all I know for now."
   let emeka_question_pda;
 
   const alice_question_topic = "What is ED25519 curve?rrrrrrrrrr"
   const alice_question_body = "Someone should dive deep into the full mathematics behind secp256k1 from the prime field, short Weierstrass form, base point G, cofactor, all the way to how ECDSA signing/verification actually works u";
+  const alice_answer_body = "Emeka, a PDA is an account that is derived by a program using certain parameters called seeds. This account does not have a corresponding private Key. A nonce known as a bump is iterated to ensure that a nonce is found such that the public key falls off the ED25519 curve." //272
   let alice_question_pda;
 
   const bob_question_topic = "What is ED25519 curve?";
   const bob_question_body = "Someone should dive deep into the full mathematics behind secp256k1 from the prime field, short Weierstrass form, base point G, cofactor, all the way to how ECDSA signing/verification actually works under the hood.";
+  const bob_answer_body = "Emeka, a PDA is an account that is derived by a program using certain parameters called seeds. This account does not have a corresponding private Key unlike other normal accounts. This is because a nonce known as a bump is iterated to ensure that a nonce is found such that the public key falls off the ED25519 curve." //317
   let bob_question_pda;
 
   describe("Create a Question", async () => {
@@ -128,34 +131,114 @@ describe("stack_underflow", () => {
 
   describe("Post Answers", async () => {
     it("Emeka should be able to answer his own question", async () => {
-      // call the post_answer method
-      program.methods.
 
+      const emekaPDA = await program.account.question.fetch(emeka_question_pda);
+
+      // generate a PDA for the answer
+      const [emeka_answer_pda, bump] = PublicKey.findProgramAddressSync(
+        [
+          anchor.utils.bytes.utf8.encode(ANSWER_SEED),
+          emeka_question_pda.toBuffer(),
+          Buffer.from(Uint32Array.from([emekaPDA.answerCount]).buffer),
+        ], program.programId
+      )
+      // call the post_answer method
+      const rpcCall = await program.methods.answer(emekaPDA.answerCount, emeka_answer_body).accounts(
+        {
+          answerAuthor: emeka.publicKey,
+          answer: emeka_answer_pda,
+          question: emeka_question_pda,
+          systemProgram: anchor.web3.SystemProgram.programId
+        }
+      ).signers([emeka]).rpc();
 
       // confirm that account data matches emeka's answer
+      await check_answer(program, emeka_answer_pda, emeka.publicKey, emeka_answer_body);
     })
 
     it("Emeka's question count should increase to 1", async () => {
       // fetch emeka's question account info
+      const emekaPDA = await program.account.question.fetch(emeka_question_pda);
 
       // confirm that the answer count is now 1
+      expect(emekaPDA.answerCount).to.equal(1);
     })
 
     it("Alice should be able to answer Emeka's question", async () => {
+      const emekaPDA = await program.account.question.fetch(emeka_question_pda);
 
+      // generate a PDA for the answer
+      const [alice_answer_pda, bump] = PublicKey.findProgramAddressSync(
+        [
+          anchor.utils.bytes.utf8.encode(ANSWER_SEED),
+          emeka_question_pda.toBuffer(),
+          Buffer.from(Uint32Array.from([emekaPDA.answerCount]).buffer),
+        ], program.programId
+      );
+
+      // call the post_answer method
+      const rpcCall = await program.methods.answer(emekaPDA.answerCount, alice_answer_body).accounts(
+        {
+          answerAuthor: alice.publicKey,
+          answer: alice_answer_pda,
+          question: emeka_question_pda,
+          systemProgram: anchor.web3.SystemProgram.programId
+        }
+      ).signers([alice]).rpc();
+
+      // confirm that account data matches alice's answer
+      await check_answer(program, alice_answer_pda, alice.publicKey, alice_answer_body);
 
     })
 
     it("Emeka's question count should increase to 2", async () => {
+      // fetch emeka's question account info
+      const emekaPDA = await program.account.question.fetch(emeka_question_pda);
 
+      // confirm that the answer count is now 2
+      expect(emekaPDA.answerCount).to.equal(2);
     })
 
-    it("Bob should be able to answer Emeka's question", async () => {
+    it("Bob's answer to Emeka's question should fail because it has more than the max allowed characters", async () => {
+      const emekaPDA = await program.account.question.fetch(emeka_question_pda);
 
+      // generate a PDA for the answer
+      const [bob_answer_pda, bump] = PublicKey.findProgramAddressSync(
+        [
+          anchor.utils.bytes.utf8.encode(ANSWER_SEED),
+          emeka_question_pda.toBuffer(),
+          Buffer.from(Uint32Array.from([emekaPDA.answerCount]).buffer),
+        ], program.programId
+      );
+
+      // call the post_answer method
+      let txError;
+      try {
+        await program.methods.answer(emekaPDA.answerCount, bob_answer_body).accounts(
+          {
+            answerAuthor: bob.publicKey,
+            answer: bob_answer_pda,
+            question: emeka_question_pda,
+            systemProgram: anchor.web3.SystemProgram.programId
+          }
+        ).signers([bob]).rpc();
+
+        assert.fail("Bob's transaction was supposed to fail but it succeeded")
+
+      } catch (err: any) {
+        txError = err;
+      }
+
+      expect(txError.error.errorCode.code).to.equal("AnswerTooLong");
+      expect(txError.error.errorMessage).to.equal("Cannot Post, Answer too long");
     })
 
-    it("Emeka's question count should increase to 3", async () => {
+    it("Emeka's question count should stay at 2", async () => {
+      // fetch emeka's question account info
+      const emekaPDA = await program.account.question.fetch(emeka_question_pda);
 
+      // confirm that the answer count is still 2
+      expect(emekaPDA.answerCount).to.equal(2);
     })
   })
 
@@ -189,6 +272,24 @@ async function check_question(
   }
 
   if (answer_count) {
-    assert.strictEqual(questionData.answerCount.toNumber(), 0, `Number of answers should be ${answer_count} but was ${questionData.answerCount.toNumber()}`);
+    assert.strictEqual(questionData.answerCount, 0, `Number of answers should be ${answer_count} but was ${questionData.answerCount}`);
+  }
+}
+
+
+async function check_answer(
+  program: anchor.Program<StackUnderflow>,
+  answer: PublicKey,
+  answer_author: PublicKey,
+  body: String
+) {
+  let answerData = await program.account.answer.fetch(answer);
+
+  if (answer_author) {
+    assert.strictEqual(answerData.answerAuthor.toBase58(), answer_author.toBase58(), `Answer author should be ${answer_author.toString()} but was ${answerData.answerAuthor.toString()}`);
+  }
+
+  if (body) {
+    assert.strictEqual(answerData.answerBody, body, `Answer body should be ${body} but was ${answerData.answerBody}`);
   }
 }

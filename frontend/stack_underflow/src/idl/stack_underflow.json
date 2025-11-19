@@ -1,0 +1,235 @@
+{
+    "address": "GSKUuDySaKJbVUiHqBa2yLpbVXLL2yZCvcp3oks9jLCL",
+    "metadata": {
+        "name": "stack_underflow",
+        "version": "0.1.0",
+        "spec": "0.1.0",
+        "description": "Created with Anchor"
+    },
+    "instructions": [
+        {
+            "name": "answer",
+            "discriminator": [
+                72,
+                214,
+                44,
+                32,
+                53,
+                222,
+                9,
+                244
+            ],
+            "accounts": [
+                {
+                    "name": "answer_author",
+                    "writable": true,
+                    "signer": true
+                },
+                {
+                    "name": "answer",
+                    "writable": true,
+                    "pda": {
+                        "seeds": [
+                            {
+                                "kind": "const",
+                                "value": [
+                                    65,
+                                    78,
+                                    83,
+                                    87,
+                                    69,
+                                    82
+                                ]
+                            },
+                            {
+                                "kind": "account",
+                                "path": "question"
+                            },
+                            {
+                                "kind": "arg",
+                                "path": "_answer_index"
+                            }
+                        ]
+                    }
+                },
+                {
+                    "name": "question",
+                    "writable": true
+                },
+                {
+                    "name": "system_program",
+                    "address": "11111111111111111111111111111111"
+                }
+            ],
+            "args": [
+                {
+                    "name": "_answer_index",
+                    "type": "u32"
+                },
+                {
+                    "name": "answer_body",
+                    "type": "string"
+                }
+            ]
+        },
+        {
+            "name": "initialize",
+            "discriminator": [
+                175,
+                175,
+                109,
+                31,
+                13,
+                152,
+                155,
+                237
+            ],
+            "accounts": [
+                {
+                    "name": "question_authority",
+                    "writable": true,
+                    "signer": true
+                },
+                {
+                    "name": "question",
+                    "writable": true,
+                    "pda": {
+                        "seeds": [
+                            {
+                                "kind": "const",
+                                "value": [
+                                    81,
+                                    85,
+                                    69,
+                                    83,
+                                    84,
+                                    73,
+                                    79,
+                                    78
+                                ]
+                            },
+                            {
+                                "kind": "arg",
+                                "path": "topic"
+                            },
+                            {
+                                "kind": "account",
+                                "path": "question_authority"
+                            }
+                        ]
+                    }
+                },
+                {
+                    "name": "system_program",
+                    "address": "11111111111111111111111111111111"
+                }
+            ],
+            "args": [
+                {
+                    "name": "question_topic",
+                    "type": "string"
+                },
+                {
+                    "name": "question_body",
+                    "type": "string"
+                }
+            ]
+        }
+    ],
+    "accounts": [
+        {
+            "name": "Answer",
+            "discriminator": [
+                119,
+                227,
+                103,
+                4,
+                0,
+                164,
+                56,
+                37
+            ]
+        },
+        {
+            "name": "Question",
+            "discriminator": [
+                111,
+                22,
+                150,
+                220,
+                181,
+                122,
+                118,
+                127
+            ]
+        }
+    ],
+    "errors": [
+        {
+            "code": 6000,
+            "name": "QuestionTopicTooLong",
+            "msg": "Cannot initialize, Question topic too long"
+        },
+        {
+            "code": 6001,
+            "name": "QuestionBodyTooLong",
+            "msg": "Cannot initialize, Question body too long"
+        },
+        {
+            "code": 6002,
+            "name": "AnswerTooLong",
+            "msg": "Cannot Post, Answer too long"
+        },
+        {
+            "code": 6003,
+            "name": "InvalidAnswerIndex",
+            "msg": "Invalid answer index provided"
+        }
+    ],
+    "types": [
+        {
+            "name": "Answer",
+            "type": {
+                "kind": "struct",
+                "fields": [
+                    {
+                        "name": "answer_author",
+                        "type": "pubkey"
+                    },
+                    {
+                        "name": "answer_body",
+                        "type": "string"
+                    },
+                    {
+                        "name": "timestamp",
+                        "type": "i64"
+                    }
+                ]
+            }
+        },
+        {
+            "name": "Question",
+            "type": {
+                "kind": "struct",
+                "fields": [
+                    {
+                        "name": "question_creator",
+                        "type": "pubkey"
+                    },
+                    {
+                        "name": "question_topic",
+                        "type": "string"
+                    },
+                    {
+                        "name": "question_body",
+                        "type": "string"
+                    },
+                    {
+                        "name": "answer_count",
+                        "type": "u32"
+                    }
+                ]
+            }
+        }
+    ]
+}

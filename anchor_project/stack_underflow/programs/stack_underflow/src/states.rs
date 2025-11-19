@@ -15,7 +15,7 @@ pub struct Question {
     pub question_topic: String,
     #[max_len(QUESTION_BODY_LENGTH)]
     pub question_body: String,
-    pub answer_count: u64,
+    pub answer_count: u32,
 }
 
 #[account]

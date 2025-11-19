@@ -3,7 +3,11 @@ use anchor_lang::prelude::*;
 use crate::errors::StackError;
 use crate::states::*;
 
-pub fn post_answer(ctx: Context<PostAnswer>, answer_body: String) -> Result<()> {
+pub fn post_answer(
+    ctx: Context<PostAnswer>,
+    _answer_index: u32,
+    answer_body: String,
+) -> Result<()> {
     let answer_author = &ctx.accounts.answer_author;
     let answer = &mut ctx.accounts.answer;
     let root_question = &mut ctx.accounts.question;
@@ -13,6 +17,12 @@ pub fn post_answer(ctx: Context<PostAnswer>, answer_body: String) -> Result<()> 
     require!(
         answer_body.len() <= ANSWER_LENGTH,
         StackError::AnswerTooLong
+    );
+
+    require_eq!(
+        _answer_index,
+        root_question.answer_count,
+        StackError::InvalidAnswerIndex
     );
 
     // set the values in the answer pda
@@ -27,6 +37,7 @@ pub fn post_answer(ctx: Context<PostAnswer>, answer_body: String) -> Result<()> 
 }
 
 #[derive(Accounts)]
+#[instruction(_answer_index: u32)]
 pub struct PostAnswer<'info> {
     #[account(mut)]
     pub answer_author: Signer<'info>,
@@ -34,7 +45,7 @@ pub struct PostAnswer<'info> {
         init,
         payer=answer_author,
         space= 8 + Answer::INIT_SPACE,
-        seeds = [ANSWER_SEED.as_bytes(), question.key().as_ref(), &question.answer_count.to_le_bytes()],
+        seeds = [ANSWER_SEED.as_bytes(), question.key().as_ref(), &_answer_index.to_le_bytes()],
         bump,
     )]
     pub answer: Account<'info, Answer>,
