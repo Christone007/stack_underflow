@@ -1,5 +1,7 @@
 # Stack Underflow DApp
 
+![Homepage](/frontend/stack_underflow/public/img/stack_underflow.png "Homepage")
+
 A decentralized Q&A application built on **Solana** and deployed with **Next.js** on [Vercel](https://stack-underflow-psi.vercel.app/).  
 Think of it as a blockchain‑powered version of Stack Overflow — users can post questions and answers, and all interactions are recorded on Solana Devnet.
 
