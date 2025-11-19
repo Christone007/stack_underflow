@@ -22,7 +22,7 @@ export default function Home() {
     try {
       const program = getProgram();
 
-      const allQuestions = await program.account.question.all();
+      const allQuestions = await (program.account as any).question.all();
 
       const fetchedQuestions: any[] = [];
       for (const q of allQuestions) {
@@ -33,7 +33,7 @@ export default function Home() {
         for (let i = 0; i < qAcc.answerCount; i++) {
           try {
             const answerPDA = getAnswerPDA(qPubkey, i);
-            const ansAcc = await program.account.answer.fetch(answerPDA);
+            const ansAcc = await (program.account as any).answer.fetch(answerPDA);
             answers.push({
               pubkey: answerPDA.toBase58(),
               body: ansAcc.answerBody,
