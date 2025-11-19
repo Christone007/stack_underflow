@@ -50,6 +50,7 @@ visit http://localhost:3000 in your browser
 
 ## 📸 Screenshots
 Homepage: List of questions with corresponding answers.
+![Homepage](/root/program-Christone007/frontend/stack_underflow/public/img/stack_underflow.png "Homepage")
 
 Create Question: Form to submit a new question.
 
